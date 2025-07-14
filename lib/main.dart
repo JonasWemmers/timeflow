@@ -1,6 +1,11 @@
 import 'package:flutter/cupertino.dart';
+import 'package:firebase_core/firebase_core.dart'; // Firebase Core importieren
 
-void main() => runApp(const TimeFlowApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Firebase initialisieren
+  runApp(const TimeFlowApp());
+}
 
 class TimeFlowApp extends StatelessWidget {
   const TimeFlowApp({super.key});
@@ -13,7 +18,7 @@ class TimeFlowApp extends StatelessWidget {
           middle: Text('Time Flow'),
         ),
         child: Center(
-          child: Text('Welcome to the Time Flow App!'),
+          child: Text('Welcome to Time Flow!'),
         ),
       ),
     );

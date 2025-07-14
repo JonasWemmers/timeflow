@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "684171741136",
+    "project_id": "timeflow-47fd1",
+    "storage_bucket": "timeflow-47fd1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:684171741136:android:de5b6b59fa9e4ea0b39bd5",
+        "android_client_info": {
+          "package_name": "com.example.timeflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2sHLfpwz1sdWy49yzdt33uMiBlLKGDEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
