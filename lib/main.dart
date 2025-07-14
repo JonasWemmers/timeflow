@@ -13,7 +13,7 @@ class TimeFlowApp extends StatelessWidget {
           middle: Text('Time Flow'),
         ),
         child: Center(
-          child: Text('Welcome to Time Flow!'),
+          child: Text('Welcome to the Time Flow App!'),
         ),
       ),
     );
