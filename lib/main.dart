@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:timeflow/views/login/login_view.dart';
 import 'firebase_options.dart'; 
 
 void main() async {
@@ -16,14 +17,7 @@ class TimeFlowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const CupertinoApp(
-      home: CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          middle: Text('Time Flow'),
-        ),
-        child: Center(
-          child: Text('Welcome to Time Flow!'),
-        ),
-      ),
+      home: LoginView()
     );
   }
 }
