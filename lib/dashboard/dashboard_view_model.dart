@@ -12,6 +12,10 @@ class DashboardViewModel extends ChangeNotifier {
   bool _isRunning = false;
   bool _isPaused = false;
 
+  // ✅ Urlaub-Variablen
+  final int _totalVacationDays = 30; // z.B. 30 Tage pro Jahr
+  int _usedVacationDays = 12;  // Beispiel: schon 12 Tage genommen
+
   // Getter
   Duration get elapsedWork => _elapsedWork;
   Duration get elapsedPause => _elapsedPause;
@@ -22,6 +26,23 @@ class DashboardViewModel extends ChangeNotifier {
   Duration get weekTotal => const Duration(hours: 12, minutes: 45);
   Duration get monthTotal => const Duration(hours: 45, minutes: 30);
 
+  // ✅ Urlaub Getter
+  int get remainingVacationDays => _totalVacationDays - _usedVacationDays;
+  int get totalVacationDays => _totalVacationDays;
+  int get usedVacationDays => _usedVacationDays;
+
+  // ✅ Urlaub beantragen (dummy)
+  void applyForVacation(int days) {
+    if (_usedVacationDays + days <= _totalVacationDays) {
+      _usedVacationDays += days;
+      notifyListeners();
+    } else {
+      // Optional: Fehlerbehandlung (z.B. SnackBar später)
+      debugPrint("Nicht genug Urlaubstage verfügbar!");
+    }
+  }
+
+  // ✅ Timer-Methoden
   void start() {
     _isRunning = true;
     _isPaused = false;
@@ -33,13 +54,13 @@ class DashboardViewModel extends ChangeNotifier {
   void stop() {
     _isPaused = true;
     _workStopwatch.stop();
-    _pauseStopwatch.start(); // ✅ Pause-Timer starten
+    _pauseStopwatch.start();
     notifyListeners();
   }
 
   void resume() {
     _isPaused = false;
-    _pauseStopwatch.stop(); // ✅ Pause-Timer stoppen
+    _pauseStopwatch.stop();
     _pauseStopwatch.reset();
     _workStopwatch.start();
     _startTimer();
