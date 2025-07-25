@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:timeflow/constants/app_colors.dart';
-import 'package:timeflow/auth/register/register_view.dart';
+import 'package:timeflow/auth/login/login_view.dart';
 import 'splash_view_model.dart';
 
 class SplashView extends StatefulWidget {
-  const SplashView({super.key, required Null Function() onFinished});
+  const SplashView({super.key});
 
   @override
   State<SplashView> createState() => _SplashViewState();
@@ -16,13 +16,13 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = SplashViewModel(onFinished: _navigateToRegister);
+    _viewModel = SplashViewModel(onFinished: _navigateToLogin);
     _viewModel.startSplash();
   }
 
-  void _navigateToRegister() {
+  void _navigateToLogin() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const RegisterView()),
+      MaterialPageRoute(builder: (_) => const LoginView()),
     );
   }
 
