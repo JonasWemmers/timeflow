@@ -4,6 +4,7 @@ import 'package:timeflow/appBar/custom_app_bar.dart';
 import 'package:timeflow/BottomNavBar/bottom_nav_bar.dart';
 import 'package:timeflow/constants/app_colors.dart';
 import 'package:timeflow/dashboard/dashboard_view_model.dart';
+import 'package:timeflow/holiday/holiday_view.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -256,8 +257,14 @@ class _DashboardViewState extends State<DashboardView> {
                             const SizedBox(height: 10),
                             ElevatedButton(
                               onPressed: () {
-                                // TODO: Navigation zu Urlaubsantrags-Seite oder Dialog
-                                print("Urlaubsantrag stellen");
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                                    child: const HolidayView(),
+                                  ),
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
