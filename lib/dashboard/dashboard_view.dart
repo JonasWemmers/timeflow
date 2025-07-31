@@ -5,6 +5,7 @@ import 'package:timeflow/BottomNavBar/bottom_nav_bar.dart';
 import 'package:timeflow/constants/app_colors.dart';
 import 'package:timeflow/dashboard/dashboard_view_model.dart';
 import 'package:timeflow/holiday/holiday_view.dart';
+import 'dart:async';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -15,29 +16,112 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   int _currentIndex = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DashboardViewModel>().loadCurrentStatus();
+      _startTimer();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        // Aktualisiere die UI jede Sekunde, wenn eine Arbeitszeit vorhanden ist
+        final vm = context.read<DashboardViewModel>();
+        if (vm.activeWorkTime != null) {
+          setState(() {});
+        }
+      }
+    });
+  }
 
   void _onNavTap(int index) {
     setState(() {
       _currentIndex = index;
     });
+    // Navigation zu anderen Seiten
+    if (index == 1) {
+      Navigator.pushReplacementNamed(context, '/statistics');
+    } else if (index == 2) {
+      // TODO: Profil-Seite
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => DashboardViewModel(),
-      child: Consumer<DashboardViewModel>(
-        builder: (context, vm, _) {
-          return Scaffold(
-            backgroundColor: AppColors.backgroundLight,
-            appBar: const CustomAppBar(title: 'Dashboard'),
-            body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    /// ✅ Arbeitszeit Card
+    return Consumer<DashboardViewModel>(
+      builder: (context, vm, _) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundLight,
+          appBar: const CustomAppBar(title: 'Dashboard'),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  /// ✅ Arbeitszeit Card
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 30,
+                        horizontal: 16,
+                      ),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            vm.getWorkTimeDisplay(),
+                            style: const TextStyle(
+                              fontSize: 56,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryDark,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            vm.isWorking
+                                ? (vm.isOnBreak
+                                    ? "Pausiert"
+                                    : "Arbeitszeit läuft…")
+                                : "Nicht gestartet",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color:
+                                  vm.isOnBreak
+                                      ? AppColors.warning
+                                      : (vm.isWorking
+                                          ? AppColors.success
+                                          : AppColors.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  /// ✅ Pause Timer (nur wenn pausiert)
+                  if (vm.isOnBreak)
                     Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -45,36 +129,32 @@ class _DashboardViewState extends State<DashboardView> {
                       elevation: 4,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 30, horizontal: 16),
+                          vertical: 20,
+                          horizontal: 16,
+                        ),
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: AppColors.white,
+                          color: AppColors.warning.withAlpha(
+                            (0.1 * 255).round(),
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
                           children: [
-                            Text(
-                              vm.formatDuration(vm.elapsedWork),
-                              style: const TextStyle(
-                                fontSize: 56,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryDark,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              vm.isRunning
-                                  ? (vm.isPaused
-                                      ? "Pausiert"
-                                      : "Arbeitszeit läuft…")
-                                  : "Nicht gestartet",
+                            const Text(
+                              "Pause seit:",
                               style: TextStyle(
                                 fontSize: 16,
-                                color: vm.isPaused
-                                    ? AppColors.warning
-                                    : (vm.isRunning
-                                        ? AppColors.success
-                                        : AppColors.textSecondary),
+                                color: AppColors.warning,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              vm.getBreakTimeDisplay(),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.warning,
                               ),
                             ),
                           ],
@@ -82,251 +162,280 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 30),
 
-                    /// ✅ Pause Timer (nur wenn pausiert)
-                    if (vm.isPaused)
-                      Card(
+                  /// ✅ Buttons
+                  if (!vm.isWorking)
+                    ElevatedButton(
+                      onPressed: vm.isLoading ? null : vm.startWork,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 60,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 20, horizontal: 16),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withAlpha((0.1 * 255).round()),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            children: [
-                              const Text(
-                                "Pause seit:",
+                      ),
+                      child:
+                          vm.isLoading
+                              ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'Starten',
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.warning,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                vm.formatDuration(vm.elapsedPause),
-                                style: const TextStyle(
-                                  fontSize: 28,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.warning,
                                 ),
                               ),
-                            ],
-                          ),
+                    )
+                  else if (vm.isOnBreak)
+                    ElevatedButton(
+                      onPressed: vm.isLoading ? null : vm.endBreak,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 60,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-
-                    const SizedBox(height: 30),
-
-                    /// ✅ Buttons
-                    if (!vm.isRunning)
-                      ElevatedButton(
-                        onPressed: vm.start,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 60, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Starten',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      )
-                    else if (vm.isPaused)
-                      ElevatedButton(
-                        onPressed: vm.resume,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 60, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Weiter',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      )
-                    else
-                      ElevatedButton(
-                        onPressed: vm.stop,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.warning,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 60, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Pause',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-
-                    const SizedBox(height: 16),
-
-                    if (vm.isRunning)
-                      ElevatedButton(
-                        onPressed: vm.end,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 50, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Beenden',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-
-                    const SizedBox(height: 30),
-
-                    /// ✅ Statistik-Karten
+                      child:
+                          vm.isLoading
+                              ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'Pause beenden',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                    )
+                  else
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _statCard("Heute", vm.formatDuration(vm.elapsedWork),
-                            AppColors.primary),
-                        _statCard(
-                            "Woche",
-                            vm.formatDuration(vm.weekTotal),
-                            AppColors.success),
-                        _statCard(
-                            "Monat",
-                            vm.formatDuration(vm.monthTotal),
-                            AppColors.warning),
+                        ElevatedButton(
+                          onPressed: vm.isLoading ? null : vm.startBreak,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.warning,
+                            foregroundColor: AppColors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child:
+                              vm.isLoading
+                                  ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Pause',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                        ),
+                        ElevatedButton(
+                          onPressed: vm.isLoading ? null : vm.endWork,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: AppColors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child:
+                              vm.isLoading
+                                  ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Beenden',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                        ),
                       ],
                     ),
 
-                    const SizedBox(height: 30),
+                  const SizedBox(height: 30),
 
-                    /// ✅ Urlaub Card
-                    Card(
-                      shape: RoundedRectangleBorder(
+                  /// ✅ Urlaub Card
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 16,
+                      ),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Urlaub",
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Urlaub",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryDark,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Verfügbar: ${vm.availableHolidayDays} Tage",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      insetPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 24,
+                                      ),
+                                      child: const HolidayViewWrapper(),
+                                    ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Urlaub beantragen',
                               style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryDark,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "Verfügbar: ${vm.remainingVacationDays} Tage",
-                              style: const TextStyle(
                                 fontSize: 16,
-                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                                    child: const HolidayView(),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: AppColors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text(
-                                'Urlaub beantragen',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Fehlermeldung
+                  if (vm.errorMessage != null)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.error.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              vm.errorMessage!,
+                              style: const TextStyle(color: AppColors.error),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.error,
+                            ),
+                            onPressed: vm.clearError,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
-            bottomNavigationBar: CustomBottomNavBar(
-              currentIndex: _currentIndex,
-              onTap: _onNavTap,
-            ),
-          );
-        },
-      ),
+          ),
+          bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onNavTap,
+          ),
+        );
+      },
     );
   }
+}
 
-  Widget _statCard(String title, String value, Color color) {
-    return Expanded(
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          decoration: BoxDecoration(
-            color: color.withAlpha((0.08 * 255).round()),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Text(title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  )),
-              const SizedBox(height: 4),
-              Text(value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  )),
-            ],
-          ),
-        ),
-      ),
+// Wrapper widget to provide DashboardViewModel
+class DashboardViewWrapper extends StatelessWidget {
+  const DashboardViewWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => DashboardViewModel(),
+      child: const DashboardView(),
     );
   }
 }

@@ -18,14 +18,19 @@ class LoginView extends StatelessWidget {
             body: Center(
               child: SingleChildScrollView(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 40,
+                  ),
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryLight.withAlpha((0.2 * 255).round()),
+                        color: AppColors.primaryLight.withAlpha(
+                          (0.2 * 255).round(),
+                        ),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -50,23 +55,32 @@ class LoginView extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Text(
                               viewModel.errorMessage!,
-                              style: TextStyle(color: AppColors.error, fontSize: 14),
+                              style: TextStyle(
+                                color: AppColors.error,
+                                fontSize: 14,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ),
                         TextFormField(
                           decoration: InputDecoration(
                             labelText: 'E-Mail',
-                            labelStyle: TextStyle(color: AppColors.textSecondary),
+                            labelStyle: TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
                             filled: true,
                             fillColor: AppColors.backgroundLight,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            prefixIcon: Icon(Icons.email, color: AppColors.primary),
+                            prefixIcon: Icon(
+                              Icons.email,
+                              color: AppColors.primary,
+                            ),
                           ),
                           keyboardType: TextInputType.emailAddress,
+                          onChanged: viewModel.setEmail,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Bitte E-Mail eingeben';
@@ -76,29 +90,33 @@ class LoginView extends StatelessWidget {
                             }
                             return null;
                           },
-                          onChanged: viewModel.setEmail,
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
                           decoration: InputDecoration(
                             labelText: 'Passwort',
-                            labelStyle: TextStyle(color: AppColors.textSecondary),
+                            labelStyle: TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
                             filled: true,
                             fillColor: AppColors.backgroundLight,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            prefixIcon: Icon(Icons.lock, color: AppColors.primary),
+                            prefixIcon: Icon(
+                              Icons.lock,
+                              color: AppColors.primary,
+                            ),
                           ),
                           obscureText: true,
+                          onChanged: viewModel.setPassword,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Bitte Passwort eingeben';
                             }
                             return null;
                           },
-                          onChanged: viewModel.setPassword,
                         ),
                         const SizedBox(height: 32),
                         SizedBox(
@@ -113,30 +131,38 @@ class LoginView extends StatelessWidget {
                               ),
                               elevation: 2,
                             ),
-                            onPressed: viewModel.isLoading
-                                ? null
-                                : () => viewModel.login(context),
-                            child: viewModel.isLoading
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
+                            onPressed:
+                                viewModel.isLoading
+                                    ? null
+                                    : () => viewModel.login(context),
+                            child:
+                                viewModel.isLoading
+                                    ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                    : const Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  )
-                                : const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                        fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
                           ),
                         ),
                         const SizedBox(height: 16),
                         GestureDetector(
                           onTap: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const RegisterView(showBackArrow: true)),
+                              MaterialPageRoute(
+                                builder:
+                                    (_) =>
+                                        const RegisterView(showBackArrow: true),
+                              ),
                             );
                           },
                           child: Text(

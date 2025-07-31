@@ -1,44 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:timeflow/constants/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
+  final supabase = Supabase.instance.client;
 
-  String email = '';
-  String password = '';
-  String confirmPassword = '';
-  bool isLoading = false;
-  String? errorMessage;
+  String _email = '';
+  String _password = '';
+  String _confirmPassword = '';
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+
+  void setEmail(String email) {
+    _email = email;
+  }
+
+  void setPassword(String password) {
+    _password = password;
+  }
+
+  void setConfirmPassword(String confirmPassword) {
+    _confirmPassword = confirmPassword;
+  }
 
   Future<void> register(BuildContext context) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
 
-    isLoading = true;
-    errorMessage = null;
+    if (_password != _confirmPassword) {
+      _errorMessage = 'Passwörter stimmen nicht überein';
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+      await supabase.auth.signUp(email: _email.trim(), password: _password);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Erfolgreich registriert'),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        Navigator.of(context).pushReplacementNamed('/dashboard');
       }
-    } on FirebaseAuthException catch (e) {
-      errorMessage = e.message;
+    } on AuthException catch (e) {
+      _errorMessage = e.message;
     } catch (e) {
-      errorMessage = 'Unbekannter Fehler: $e';
+      _errorMessage = 'Unbekannter Fehler: $e';
     } finally {
-      isLoading = false;
+      _isLoading = false;
       notifyListeners();
     }
   }

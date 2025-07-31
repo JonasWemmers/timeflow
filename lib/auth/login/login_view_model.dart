@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
+  final supabase = Supabase.instance.client;
 
   String _email = '';
   String _password = '';
@@ -28,7 +29,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await supabase.auth.signInWithPassword(
         email: _email.trim(),
         password: _password,
       );
@@ -36,7 +37,7 @@ class LoginViewModel extends ChangeNotifier {
       if (context.mounted) {
         Navigator.of(context).pushReplacementNamed('/dashboard');
       }
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       _errorMessage = e.message;
     } catch (e) {
       _errorMessage = 'Unbekannter Fehler: $e';
