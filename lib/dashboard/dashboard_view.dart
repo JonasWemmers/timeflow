@@ -5,6 +5,7 @@ import 'package:timeflow/BottomNavBar/bottom_nav_bar.dart';
 import 'package:timeflow/constants/app_colors.dart';
 import 'package:timeflow/dashboard/dashboard_view_model.dart';
 import 'package:timeflow/holiday/holiday_view.dart';
+import 'package:timeflow/routes/app_routes.dart';
 import 'dart:async';
 
 class DashboardView extends StatefulWidget {
@@ -51,9 +52,9 @@ class _DashboardViewState extends State<DashboardView> {
     });
     // Navigation zu anderen Seiten
     if (index == 1) {
-      Navigator.pushReplacementNamed(context, '/statistics');
+      Navigator.pushNamed(context, AppRoutes.statistics);
     } else if (index == 2) {
-      // TODO: Profil-Seite
+      Navigator.pushNamed(context, AppRoutes.profile);
     }
   }
 

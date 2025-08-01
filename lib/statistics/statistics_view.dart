@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:timeflow/appBar/custom_app_bar.dart';
 import 'package:timeflow/BottomNavBar/bottom_nav_bar.dart';
 import 'package:timeflow/constants/app_colors.dart';
+import 'package:timeflow/routes/app_routes.dart';
 import 'package:timeflow/statistics/statistics_view_model.dart';
 
 class StatisticsView extends StatefulWidget {
@@ -38,9 +39,9 @@ class _StatisticsViewState extends State<StatisticsView>
     });
     // Navigation zu anderen Seiten
     if (index == 0) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      Navigator.pushNamed(context, AppRoutes.dashboard);
     } else if (index == 2) {
-      // TODO: Profil-Seite
+      Navigator.pushNamed(context, AppRoutes.profile);
     }
   }
 

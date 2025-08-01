@@ -1,8 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/break.dart';
+import 'work_time_service.dart';
 
 class BreakService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final WorkTimeService _workTimeService = WorkTimeService();
 
   /// Startet eine neue Pause
   Future<Break> startBreak() async {
@@ -14,17 +16,8 @@ class BreakService {
       throw Exception('Benutzer nicht authentifiziert');
     }
 
-    // Hole die aktive Arbeitszeit
-    final activeWorkTimeResponse = await _supabase
-        .from('work_times')
-        .select()
-        .eq('user_id', user.id);
-
-    // Filtere client-side für aktive Arbeitszeit
-    final activeWorkTime =
-        activeWorkTimeResponse
-            .where((workTime) => workTime['end_time'] == null)
-            .firstOrNull;
+    // Hole die aktive Arbeitszeit über den WorkTimeService
+    final activeWorkTime = await _workTimeService.getActiveWorkTime();
 
     if (activeWorkTime == null) {
       throw Exception('Keine aktive Arbeitszeit gefunden');
@@ -32,7 +25,7 @@ class BreakService {
 
     final data = {
       'user_id': user.id,
-      'work_time_id': activeWorkTime['id'],
+      'work_time_id': activeWorkTime.id,
       'start_time': now.toIso8601String(),
       'date': today.toIso8601String().split('T')[0],
     };
@@ -63,9 +56,15 @@ class BreakService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Benutzer nicht authentifiziert');
+    }
+
     final response = await _supabase
         .from('breaks')
         .select()
+        .eq('user_id', user.id)
         .order('date', ascending: false);
 
     List<Break> breaks = response.map((json) => Break.fromJson(json)).toList();
@@ -94,9 +93,15 @@ class BreakService {
 
   /// Holt die aktuelle aktive Pause
   Future<Break?> getActiveBreak() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Benutzer nicht authentifiziert');
+    }
+
     final response = await _supabase
         .from('breaks')
         .select()
+        .eq('user_id', user.id)
         .order('start_time', ascending: false)
         .limit(10);
 

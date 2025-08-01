@@ -46,9 +46,15 @@ class WorkTimeService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Benutzer nicht authentifiziert');
+    }
+
     final response = await _supabase
         .from('work_times')
         .select()
+        .eq('user_id', user.id)
         .order('date', ascending: false);
 
     List<WorkTime> workTimes =
@@ -79,9 +85,15 @@ class WorkTimeService {
 
   /// Holt die aktuelle aktive Arbeitszeit
   Future<WorkTime?> getActiveWorkTime() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Benutzer nicht authentifiziert');
+    }
+
     final response = await _supabase
         .from('work_times')
         .select()
+        .eq('user_id', user.id)
         .order('start_time', ascending: false)
         .limit(10);
 

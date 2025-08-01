@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:timeflow/auth/login/login_view.dart';
 import 'package:timeflow/auth/register/register_view.dart';
 import 'package:timeflow/dashboard/dashboard_view.dart';
+import 'package:timeflow/profile/profile_view.dart';
 import 'package:timeflow/routes/app_routes.dart';
 import 'package:timeflow/splash_screen/splash_view.dart';
 import 'package:timeflow/statistics/statistics_view.dart';
@@ -23,6 +24,9 @@ class AppRouter {
 
       case AppRoutes.statistics:
         return MaterialPageRoute(builder: (_) => const StatisticsViewWrapper());
+
+      case AppRoutes.profile:
+        return MaterialPageRoute(builder: (_) => const ProfileViewWrapper());
 
       default:
         return MaterialPageRoute(

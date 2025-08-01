@@ -34,9 +34,15 @@ class HolidayService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Benutzer nicht authentifiziert');
+    }
+
     final response = await _supabase
         .from('holidays')
         .select()
+        .eq('user_id', user.id)
         .order('start_date', ascending: false);
 
     List<Holiday> holidays =
